@@ -3,8 +3,21 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8%2B-blue)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![No dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen)](recon.py)
+[![Platform](https://img.shields.io/badge/platform-linux%20%7C%20macOS%20%7C%20windows-lightgrey)](recon.py)
 
 Passive subdomain enumeration from multiple free, keyless sources. It never sends a single packet to the target: everything comes from public certificate-transparency logs and passive DNS records.
+
+## Contents
+
+- [Features](#features)
+- [Screenshots](#screenshots)
+- [Install](#install)
+- [Usage](#usage)
+- [Options](#options)
+- [Data sources](#data-sources)
+- [Limitations](#limitations)
+- [Ethical use](#ethical-use)
+- [License](#license)
 
 ## Features
 
@@ -14,6 +27,20 @@ Passive subdomain enumeration from multiple free, keyless sources. It never send
 - **Clean output** - deduplicated (case-insensitive), trailing dots stripped, wildcards resolved, sorted alphabetically, non-matching domains filtered out
 - **Zero dependencies** - Python 3 standard library only (`urllib`, `json`, `argparse`). Nothing to install.
 - **Pipe-friendly** - progress goes to stderr, results to stdout; use `-q` for results only
+
+## Screenshots
+
+Live scan against `example.com` (note crt.sh returning a 502 here: the tool warns and keeps going):
+
+![pentrix-recon live scan](docs/images/scan.png)
+
+Full help output:
+
+![pentrix-recon help](docs/images/help.png)
+
+Quiet mode and file output:
+
+![pentrix-recon quiet mode](docs/images/quiet.png)
 
 ## Install
 
@@ -30,36 +57,52 @@ That is it. No `pip install`, no virtualenv, no API keys.
 Basic run (results print to stdout):
 
 ```bash
-python3 recon.py hackerone.com
+python3 recon.py example.com
+```
+
+Real captured output (progress lines go to stderr, subdomain list to stdout):
+
+```
+$ python3 recon.py example.com
+[*] querying crt.sh certificate transparency ...
+[-] warning: crt.sh certificate transparency failed: HTTP Error 502: Bad Gateway
+[*] querying CertSpotter certificate transparency ...
+[+] CertSpotter certificate transparency: 8 names
+[*] querying hackertarget hostsearch ...
+[+] hackertarget hostsearch: 1 names
+[*] 2 unique subdomains after dedupe
+example.com
+www.example.com
 ```
 
 Save results to a file:
 
 ```bash
-python3 recon.py hackerone.com -o subs.txt
+python3 recon.py example.com -o subs.txt
 ```
 
 Pick sources and raise the timeout:
 
 ```bash
-python3 recon.py hackerone.com --sources crtsh,certspotter --timeout 20
+python3 recon.py example.com --sources crtsh,certspotter --timeout 20
 ```
 
 Quiet mode (only subdomains on stdout, nothing else):
 
 ```bash
-python3 recon.py hackerone.com -q > subs.txt
+python3 recon.py example.com -q > subs.txt
 ```
 
 Show version:
 
 ```bash
-python3 recon.py --version
+$ python3 recon.py --version
+pentrix-recon 1.0.0
 ```
 
-### Real output
+### Larger target
 
-The command below was run against `hackerone.com` during testing (progress lines go to stderr, subdomain list to stdout):
+The command below was run against `hackerone.com` during testing:
 
 ```
 $ python3 recon.py hackerone.com
@@ -87,21 +130,6 @@ mta-sts.managed.hackerone.com
 support.hackerone.com
 websockets.hackerone.com
 www.hackerone.com
-```
-
-When a source is down, the tool keeps going and tells you:
-
-```
-$ python3 recon.py example.com
-[*] querying crt.sh certificate transparency ...
-[-] warning: crt.sh certificate transparency failed: HTTP Error 502: Bad Gateway
-[*] querying CertSpotter certificate transparency ...
-[+] CertSpotter certificate transparency: 8 names
-[*] querying hackertarget hostsearch ...
-[+] hackertarget hostsearch: 2 names
-[*] 2 unique subdomains after dedupe
-example.com
-www.example.com
 ```
 
 ## Options
